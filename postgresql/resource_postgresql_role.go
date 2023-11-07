@@ -189,13 +189,16 @@ func resourcePostgreSQLRoleCreate(db *DBConnection, d *schema.ResourceData) erro
 		sqlKey string
 	}{
 		{rolePasswordAttr, "PASSWORD"},
-		{roleValidUntilAttr, "VALID UNTIL"},
+		// TODO: Disabled because of `pq: timestamp "294277-01-01T00:00:00Z" exceeds supported timestamp bounds`
+		// Not sure where the timestamp is coming from, guessing this?
+		// {roleValidUntilAttr, "VALID UNTIL"},
 	}
 	intOpts := []struct {
 		hclKey string
 		sqlKey string
 	}{
-		{roleConnLimitAttr, "CONNECTION LIMIT"},
+		// TODO: Re-enable. Testing if this a cockroach DB issue.
+		// {roleConnLimitAttr, "CONNECTION LIMIT"},
 	}
 
 	type boolOptType struct {
@@ -204,22 +207,22 @@ func resourcePostgreSQLRoleCreate(db *DBConnection, d *schema.ResourceData) erro
 		sqlKeyDisable string
 	}
 	boolOpts := []boolOptType{
-		{roleSuperuserAttr, "SUPERUSER", "NOSUPERUSER"},
+		// {roleSuperuserAttr, "SUPERUSER", "NOSUPERUSER"},
 		{roleCreateDBAttr, "CREATEDB", "NOCREATEDB"},
 		{roleCreateRoleAttr, "CREATEROLE", "NOCREATEROLE"},
-		{roleInheritAttr, "INHERIT", "NOINHERIT"},
+		// {roleInheritAttr, "INHERIT", "NOINHERIT"},
 		{roleLoginAttr, "LOGIN", "NOLOGIN"},
 		// roleEncryptedPassAttr is used only when rolePasswordAttr is set.
 		// {roleEncryptedPassAttr, "ENCRYPTED", "UNENCRYPTED"},
 	}
 
-	if db.featureSupported(featureRLS) {
-		boolOpts = append(boolOpts, boolOptType{roleBypassRLSAttr, "BYPASSRLS", "NOBYPASSRLS"})
-	}
+	//if db.featureSupported(featureRLS) {
+	//	boolOpts = append(boolOpts, boolOptType{roleBypassRLSAttr, "BYPASSRLS", "NOBYPASSRLS"})
+	//}
 
-	if db.featureSupported(featureReplication) {
-		boolOpts = append(boolOpts, boolOptType{roleReplicationAttr, "REPLICATION", "NOREPLICATION"})
-	}
+	//if db.featureSupported(featureReplication) {
+	//	boolOpts = append(boolOpts, boolOptType{roleReplicationAttr, "REPLICATION", "NOREPLICATION"})
+	//}
 
 	createOpts := make([]string, 0, len(stringOpts)+len(intOpts)+len(boolOpts))
 
@@ -918,7 +921,8 @@ func revokeRoles(txn *sql.Tx, d *schema.ResourceData) error {
 
 	rows, err := txn.Query(query, role)
 	if err != nil {
-		return fmt.Errorf("could not get roles list for role %s: %w", role, err)
+		// TODO: Just causing an error to check it was here.
+		return fmt.Errorf("could not get roles list for role (SEE IT CHANGED) %s: %w: %s", role, err, query)
 	}
 	defer rows.Close()
 
